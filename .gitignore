@@ -1,0 +1,10 @@
+*/node_modules
+*/.gitignore
+
+#client
+client/.vscode/
+client/.history/
+client/dist
+client/tmp
+client/out-tsc
+client/bazel-out
