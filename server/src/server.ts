@@ -6,6 +6,8 @@ import { Server } from "socket.io"; // Gerçek zamanlı iletişim için Socket.i
 import * as usersController from "./controllers/users"; // Kullanıcı işlemleri için controller dosyasını içe aktarıyoruz
 import bodyParser from "body-parser"; // Gelen JSON verilerini işlemek için body-parser kullanıyoruz
 import { mongoDbUri } from "./config"; // MongoDB bağlantı URI'sini içe aktarıyoruz
+import authMiddleware from "./middlewares/auth";
+
 
 // Express uygulamasını başlatıyoruz
 const app = express();
@@ -28,6 +30,7 @@ app.post("/api/users", usersController.register);
 
 // Kullanıcı giriş işlemi için POST isteği
 app.post("/api/users/login", usersController.login);
+app.get("/api/user",authMiddleware,usersController.currentUser)
 
 // Socket.io bağlantısı için olay dinleyici
 io.on("connection", () => {

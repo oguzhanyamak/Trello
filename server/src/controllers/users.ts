@@ -5,6 +5,7 @@ import { UserDocument } from "../types/user.interface"; // Kullanıcı belgeleri
 import { Error } from "mongoose"; // Mongoose hata tiplerini kullanmak için içe aktarıyoruz
 import jwt from "jsonwebtoken"; // Kullanıcı kimlik doğrulaması için JSON Web Token (JWT) kullanıyoruz
 import { secret } from "../config"; // JWT oluştururken kullanılan gizli anahtarı içe aktarıyoruz
+import { ExpressRequestInterface } from "../types/expressRequest.interface";
 
 // Kullanıcı nesnesini normalize eden yardımcı fonksiyon
 const normalizeUser = (user: UserDocument) => {
@@ -72,4 +73,20 @@ export const login = async (
   } catch (error) {
     next(error); // Hata durumunda hata işleyicisine yönlendiriyoruz
   }
+};
+
+// `currentUser` fonksiyonu, giriş yapmış olan kullanıcının bilgilerini döndürür.
+export const currentUser = async (
+  req: ExpressRequestInterface, // `ExpressRequestInterface` sayesinde `req.user` özelliğini kullanabiliyoruz.
+  res: Response, // Express'in yanıt (response) nesnesi
+  next: NextFunction // Bir sonraki middleware'e geçmek için kullanılan fonksiyon
+): Promise<any> => {
+  
+  // Eğer `req.user` tanımlı değilse, yani kullanıcı giriş yapmamışsa 401 Unauthorized hatası döndür.
+  if (!req.user) {
+    return res.sendStatus(401); // Kullanıcı yetkilendirilmemişse erişimi reddet.
+  }
+
+  // Kullanıcı giriş yapmışsa, `normalizeUser` fonksiyonunu kullanarak kullanıcı bilgilerini dön.
+  res.send(normalizeUser(req.user));
 };
