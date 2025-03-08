@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, filter, map, Observable } from 'rxjs';
 import { CurrentUserInterface } from '../types/currentUser.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -7,27 +7,43 @@ import { RegisterRequestInterface } from '../types/registerRequest.interface';
 import { LoginRequestInterface } from '../types/loginRequest.interface';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root' // Servisin uygulama genelinde kullanılmasını sağlar
 })
 export class AuthService {
-  currentUser$ = new BehaviorSubject<CurrentUserInterface |null | undefined>(undefined)
+  // Kullanıcının mevcut durumunu saklayan BehaviorSubject
+  // undefined: Bilinmiyor, null: Çıkış yapıldı, CurrentUserInterface: Giriş yapıldı
+  currentUser$ = new BehaviorSubject<CurrentUserInterface | null | undefined>(undefined);
+  
+  // Kullanıcının giriş yapıp yapmadığını takip eden observable
+  isLogged$ = this.currentUser$.pipe(
+    filter((currentUser) => currentUser !== undefined), // undefined olan değerleri filtrele
+    map(Boolean) // currentUser değeri varsa true, yoksa false döndür
+  );
 
-  constructor(private http:HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-
-  getCurrentUser():Observable<CurrentUserInterface>{
-    return this.http.get<CurrentUserInterface>(environment.apiUrl+'/user');
+  // Mevcut kullanıcı bilgilerini API'den getirir
+  getCurrentUser(): Observable<CurrentUserInterface> {
+    return this.http.get<CurrentUserInterface>(environment.apiUrl + '/user');
   }
-  setCurrentUser(currentUser:CurrentUserInterface | null):void {
+
+  // Kullanıcı bilgisini günceller
+  setCurrentUser(currentUser: CurrentUserInterface | null): void {
     this.currentUser$.next(currentUser);
   }
-  register(registerRequest:RegisterRequestInterface):Observable<CurrentUserInterface>{
-    return this.http.post<CurrentUserInterface>(environment.apiUrl+'/users',registerRequest);
+
+  // Yeni kullanıcı kaydı için API'ye istek gönderir
+  register(registerRequest: RegisterRequestInterface): Observable<CurrentUserInterface> {
+    return this.http.post<CurrentUserInterface>(environment.apiUrl + '/users', registerRequest);
   }
-  login(loginRequest:LoginRequestInterface):Observable<CurrentUserInterface>{
-    return this.http.post<CurrentUserInterface>(environment.apiUrl+'/users/login',loginRequest);
+
+  // Kullanıcı giriş işlemi için API'ye istek gönderir
+  login(loginRequest: LoginRequestInterface): Observable<CurrentUserInterface> {
+    return this.http.post<CurrentUserInterface>(environment.apiUrl + '/users/login', loginRequest);
   }
-  setToken(currentUser:CurrentUserInterface):void{
-    localStorage.setItem('token',currentUser.token);
+
+  // Kullanıcı token'ını localStorage'e kaydeder
+  setToken(currentUser: CurrentUserInterface): void {
+    localStorage.setItem('token', currentUser.token);
   }
 }

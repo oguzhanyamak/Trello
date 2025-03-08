@@ -44,7 +44,7 @@ mongoose.connect(mongoDbUri).then(() => {
   console.log("connected to mongodb"); // Bağlantı başarılı olursa konsola mesaj yazdırıyoruz
 
   // Sunucuyu belirlenen port üzerinden dinlemeye başlatıyoruz
-  httpServer.listen(4001, () => {
+  httpServer.listen(3000, () => {
     console.log(`API is listening on port 4001`); // Başarılı başlatma mesajı
   });
 });

@@ -17,7 +17,7 @@ const normalizeUser = (user: UserDocument) => {
     email: user.email,
     username: user.username,
     id: user.id,
-    token, // Kullanıcıya JWT token ekliyoruz
+    token: `Bearer ${token}`, // Kullanıcıya JWT token ekliyoruz
   };
 };
 
