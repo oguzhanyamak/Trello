@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-  selector: 'app-login',
+  selector: 'auth-login',
   standalone: false,
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
