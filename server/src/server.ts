@@ -7,7 +7,7 @@ import * as usersController from "./controllers/users"; // Kullanıcı işlemler
 import bodyParser from "body-parser"; // Gelen JSON verilerini işlemek için body-parser kullanıyoruz
 import { mongoDbUri } from "./config"; // MongoDB bağlantı URI'sini içe aktarıyoruz
 import authMiddleware from "./middlewares/auth";
-
+import cors from "cors";
 
 // Express uygulamasını başlatıyoruz
 const app = express();
@@ -15,6 +15,8 @@ const app = express();
 const httpServer = createServer(app);
 // Socket.io sunucusunu HTTP sunucusuna bağlıyoruz
 const io = new Server(httpServer);
+
+app.use(cors());
 
 // Middleware'leri ekliyoruz
 app.use(bodyParser.json()); // JSON verileri almak için
