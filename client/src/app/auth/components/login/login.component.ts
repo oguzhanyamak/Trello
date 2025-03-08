@@ -1,35 +1,42 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-  selector: 'auth-register',
+  selector: 'app-login',
   standalone: false,
-  templateUrl: './register.component.html',
-  styleUrl: './register.component.scss',
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.scss'
 })
-export class RegisterComponent {
+export class LoginComponent {
   errorMessage: string | null = null;
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: AuthService) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      username: ['', Validators.required],
+      email: ['', Validators.required],
       password: ['', Validators.required],
     });
   }
 
   onSubmit(): void {
-    this.authService.register(this.form.value).subscribe({
+    this.authService.login(this.form.value).subscribe({
       next: (currentUser) => {
+        console.log('currentUser', currentUser);
         this.authService.setToken(currentUser);
         this.authService.setCurrentUser(currentUser);
         this.errorMessage = null;
+        this.router.navigateByUrl('/');
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage = err.error.join(', ');
+        console.log('err', err.error);
+        this.errorMessage = err.error.message;
       },
     });
   }

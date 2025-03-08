@@ -4,6 +4,7 @@ import { CurrentUserInterface } from '../types/currentUser.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RegisterRequestInterface } from '../types/registerRequest.interface';
+import { LoginRequestInterface } from '../types/loginRequest.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,9 @@ export class AuthService {
   register(registerRequest:RegisterRequestInterface):Observable<CurrentUserInterface>{
     return this.http.post<CurrentUserInterface>(environment.apiUrl+'/users',registerRequest);
   }
-
+  login(loginRequest:LoginRequestInterface):Observable<CurrentUserInterface>{
+    return this.http.post<CurrentUserInterface>(environment.apiUrl+'/users/login',loginRequest);
+  }
   setToken(currentUser:CurrentUserInterface):void{
     localStorage.setItem('token',currentUser.token);
   }
