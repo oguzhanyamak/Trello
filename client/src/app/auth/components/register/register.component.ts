@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { SocketService } from '../../../shared/services/socket.service';
 
 @Component({
   selector: 'auth-register',
@@ -16,7 +17,7 @@ export class RegisterComponent {
   // Kayıt formu için FormGroup nesnesi
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: AuthService) {
+  constructor(private fb: FormBuilder, private authService: AuthService,private socketService:SocketService) {
     // Form alanlarını oluştur ve doğrulama kurallarını belirle
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]], // Email alanı zorunlu ve geçerli email formatında olmalı
@@ -31,6 +32,7 @@ export class RegisterComponent {
       next: (currentUser) => {
         // Kullanıcı başarıyla kayıt olduysa token'ı kaydet
         this.authService.setToken(currentUser);
+        this.socketService.setupSocketConnection(currentUser);
         // Mevcut kullanıcıyı güncelle
         this.authService.setCurrentUser(currentUser);
         // Hata mesajını sıfırla

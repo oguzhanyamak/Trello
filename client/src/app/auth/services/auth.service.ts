@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RegisterRequestInterface } from '../types/registerRequest.interface';
 import { LoginRequestInterface } from '../types/loginRequest.interface';
+import { SocketService } from '../../shared/services/socket.service';
 
 @Injectable({
   providedIn: 'root' // Servisin uygulama genelinde kullanılmasını sağlar
@@ -20,7 +21,7 @@ export class AuthService {
     map(Boolean) // currentUser değeri varsa true, yoksa false döndür
   );
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,private socketSerivce:SocketService) {}
 
   // Mevcut kullanıcı bilgilerini API'den getirir
   getCurrentUser(): Observable<CurrentUserInterface> {
@@ -40,6 +41,12 @@ export class AuthService {
   // Kullanıcı giriş işlemi için API'ye istek gönderir
   login(loginRequest: LoginRequestInterface): Observable<CurrentUserInterface> {
     return this.http.post<CurrentUserInterface>(environment.apiUrl + '/users/login', loginRequest);
+  }
+
+  logout(): void {
+    localStorage.removeItem('token');
+    this.currentUser$.next(null);
+    this.socketSerivce.disconnect();
   }
 
   // Kullanıcı token'ını localStorage'e kaydeder

@@ -3,19 +3,24 @@ import express from "express"; // Express.js framework'ünü kullanıyoruz
 import { createServer } from "http"; // HTTP sunucusu oluşturmak için kullanıyoruz
 import mongoose from "mongoose"; // MongoDB bağlantısı için Mongoose kullanıyoruz
 import { Server } from "socket.io"; // Gerçek zamanlı iletişim için Socket.io kullanıyoruz
+import {Socket} from "./types/socket.interface"
 import * as usersController from "./controllers/users"; // Kullanıcı işlemleri için controller dosyasını içe aktarıyoruz
 import * as boardsController from "./controllers/boards"; // Kullanıcı işlemleri için controller dosyasını içe aktarıyoruz
 import bodyParser from "body-parser"; // Gelen JSON verilerini işlemek için body-parser kullanıyoruz
 import { mongoDbUri } from "./config"; // MongoDB bağlantı URI'sini içe aktarıyoruz
 import authMiddleware from "./middlewares/auth";
 import cors from "cors";
+import jwt from "jsonwebtoken";
+import { SocketEventsEnum } from "./types/socketEnums.enum";
+import {secret} from "./config";
+import User from "./models/user"; // Kullanıcı modelini içe aktarıyoruz
 
 // Express uygulamasını başlatıyoruz
 const app = express();
 // HTTP sunucusunu Express uygulamasıyla oluşturuyoruz
 const httpServer = createServer(app);
 // Socket.io sunucusunu HTTP sunucusuna bağlıyoruz
-const io = new Server(httpServer);
+const io = new Server(httpServer,{cors:{origin:"*"}});
 
 app.use(cors());
 
@@ -42,12 +47,51 @@ app.post("/api/users", usersController.register);
 app.post("/api/users/login", usersController.login);
 app.get("/api/user",authMiddleware,usersController.currentUser);
 app.get("/api/boards",authMiddleware,boardsController.getBoards);
-app.post("/api/boards",authMiddleware,boardsController.createBoard)
+app.post("/api/boards",authMiddleware,boardsController.createBoard);
+app.get("/api/boards/:boardId",authMiddleware,boardsController.getBoard);
 
 // Socket.io bağlantısı için olay dinleyici
-io.on("connection", () => {
-  console.log("connect"); // Yeni bir istemci bağlandığında konsola mesaj yazdırıyoruz
+// Socket.IO için kimlik doğrulama middleware'i
+io.use(async (socket: Socket, next) => {
+  try {
+    // İstemciden gelen token'ı al (handshake.auth.token üzerinden)
+    const token = (socket.handshake.auth.token as string) ?? "";
+
+    // JWT token'ı doğrula ve içindeki kullanıcı bilgilerini al
+    const data = jwt.verify(token.split(' ')[1], secret) as {
+      id: string;
+      email: string;
+    };
+
+    // Veritabanından kullanıcıyı bul
+    const user = await User.findById(data.id);
+    if (!user) {
+      return next(new Error("Authentication error")); // Kullanıcı bulunamazsa hata döndür
+    }
+
+    // Socket nesnesine doğrulanmış kullanıcıyı ekle (diğer event'lerde kullanılabilir)
+    socket.user = user;
+    
+    // Kimlik doğrulama başarılıysa, bir sonraki middleware'e geç
+    next();
+  } catch (error) {
+    // Hata durumunda bağlantıyı engelle
+    next(new Error("Socket Authentication Error"));
+  }
 });
+// Socket.IO bağlantısı kurulduğunda çalışacak olay dinleyicileri
+io.on("connection", (socket) => {
+  // Kullanıcı bir board'a katılmak istediğinde çalışır
+  socket.on(SocketEventsEnum.boardsJoin, (data) => {
+    boardsController.joinBoard(io, socket, data);
+  });
+
+  // Kullanıcı bir board'dan ayrılmak istediğinde çalışır
+  socket.on(SocketEventsEnum.boardsLeave, (data) => {
+    boardsController.leaveBoard(io, socket, data);
+  });
+});
+
 
 // MongoDB bağlantısını gerçekleştiriyoruz
 mongoose.connect(mongoDbUri).then(() => {

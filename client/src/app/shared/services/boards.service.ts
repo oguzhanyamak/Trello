@@ -25,4 +25,9 @@ export class BoardsService {
     // 'environment.apiUrl' ile base URL'yi kullanarak '/boards' endpoint'ine yeni board verisi gönderilir.
     return this.http.post<BoardInterface>(environment.apiUrl + '/boards', { title });
   }
+
+  //Belirtilen board ID'sine göre board bilgisini getirir.
+  getBoard(boardId:string):Observable<BoardInterface>{
+    return this.http.get<BoardInterface>(`${environment.apiUrl}/boards/${boardId}`);
+  }
 }

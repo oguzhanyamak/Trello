@@ -9,6 +9,8 @@ import { HomeModule } from './home/home.module';
 import { AuthInterceptor } from './auth/services/auth.interceptor.service';
 import { BoardsModule } from './boards/boards.module';
 import { InlineFormModule } from './shared/modules/inlineForm/inline-form.module';
+import { BoardModule } from './board/board.module';
+import { SocketService } from './shared/services/socket.service';
 
 @NgModule({
   declarations: [
@@ -21,6 +23,7 @@ import { InlineFormModule } from './shared/modules/inlineForm/inline-form.module
     HomeModule,
     BoardsModule,
     InlineFormModule,
+    BoardModule,
     HttpClientModule
   ],
   providers: [
@@ -28,7 +31,7 @@ import { InlineFormModule } from './shared/modules/inlineForm/inline-form.module
       provide:HTTP_INTERCEPTORS,
       useClass:AuthInterceptor,
       multi:true
-    }],
+    },SocketService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

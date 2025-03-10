@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { SocketService } from '../../../shared/services/socket.service';
 
 @Component({
   selector: 'auth-login',
@@ -20,7 +21,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder, // FormBuilder servisi ile form oluşturulacak
     private authService: AuthService, // AuthService servisi ile giriş işlemi yapılacak
-    private router: Router // Router servisi ile yönlendirme yapılacak
+    private router: Router, // Router servisi ile yönlendirme yapılacak,
+    private socketService:SocketService
   ) {
     // Form alanlarını oluştur ve doğrulama kurallarını belirle
     this.form = this.fb.group({
@@ -37,6 +39,7 @@ export class LoginComponent {
         // Giriş başarılıysa, currentUser bilgilerini kaydet
         console.log('currentUser', currentUser); // Geliştirme aşamasında currentUser'ı konsola yazdır
         this.authService.setToken(currentUser); // Token'ı localStorage'e kaydet
+        this.socketService.setupSocketConnection(currentUser);
         this.authService.setCurrentUser(currentUser); // Kullanıcıyı authService ile güncelle
         this.errorMessage = null; // Hata mesajını temizle
         this.router.navigateByUrl('/'); // Ana sayfaya yönlendir
