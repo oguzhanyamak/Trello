@@ -3,6 +3,8 @@ import { Observable } from 'rxjs';
 import { BoardInterface } from '../types/board.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { SocketService } from './socket.service';
+import { SocketEventsEnum } from '../types/socketEvents.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +13,7 @@ import { environment } from '../../../environments/environment';
 export class BoardsService {
 
   // Constructor, HttpClient servisini enjekte eder. Bu servis HTTP isteklerini yapmamıza olanak tanır.
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient,private socketService:SocketService) { }
 
   // getBoards metodu, tüm board'ları almak için HTTP GET isteği gönderir.
   getBoards(): Observable<BoardInterface[]> {
@@ -30,6 +32,13 @@ export class BoardsService {
   getBoard(boardId:string):Observable<BoardInterface>{
     return this.http.get<BoardInterface>(`${environment.apiUrl}/boards/${boardId}`);
   }
-
+  //Bir board'un bilgilerini güncellemek için kullanılan fonksiyon. Sunucuya "boardsUpdate" olayını gönderir.
+  updateBoard(boardId:string, fields:{title:string}):void{
+    this.socketService.emit(SocketEventsEnum.boardsUpdate,{boardId,fields})
+  }
+  //  * Bir board'u silmek için kullanılan fonksiyon. Sunucuya "boardsDelete" olayını gönderir.
+  deleteBoard(boardId:string):void{
+    this.socketService.emit(SocketEventsEnum.boardsDelete,{boardId})
+  }
 
 }

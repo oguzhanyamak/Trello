@@ -44,4 +44,16 @@ export class BoardService {
     // Yeni listeyi yayınlayarak güncellenmesini sağlıyoruz.
     this.tasks$.next(updatedTasks);
   }
+
+  //Board'un başlığını güncelleyen fonksiyon.
+  updateBoard(updatedBoard:BoardInterface):void{
+    // Mevcut board değerini al
+    const board = this.board$.getValue();
+     // Eğer board henüz başlatılmamışsa hata fırlat
+    if(!board){
+      throw new Error('Board is not initialized');
+    }
+     // Mevcut board'un kopyasını oluştur ve başlığını güncelle, ardından yeni değeri yay
+    this.board$.next({...board,title:updatedBoard.title});
+  }
 }

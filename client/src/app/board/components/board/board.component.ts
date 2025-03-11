@@ -56,6 +56,12 @@ this.data$ = combineLatest([
     this.socketService.listen<TaskInterface>(SocketEventsEnum.tasksCreateSuccess).subscribe((task) => {
       this.boardService.addTask(task);
     });
+    this.socketService.listen<BoardInterface>(SocketEventsEnum.boardsUpdateSuccess).subscribe((board) => {
+      this.boardService.updateBoard(board);
+    });
+    this.socketService.listen<void>(SocketEventsEnum.boardsDeleteSuccess).subscribe(() => {
+      this.router.navigateByUrl('/boards');
+    });
   }
 
   fetchData(): void {
@@ -90,5 +96,16 @@ this.data$ = combineLatest([
       columnId,
     };
     this.tasksService.createTask(taskInput);
+  }
+
+  updateBoardName(boardName:string):void{
+    this.boardsService.updateBoard(this.boardId,{title:boardName})
+  }
+
+  deleteBoard():void{
+    if(confirm('Are you sure want to delete the board ?')){
+      this.boardsService.deleteBoard(this.boardId);
+    }
+
   }
 }
