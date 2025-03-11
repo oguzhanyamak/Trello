@@ -1,9 +1,13 @@
 import { Document, Schema } from "mongoose";
-export interface Column {
+export interface Task {
   title: string;
+  description?:string;
   createdAt: Date;
   updatedAt: Date;
   userId: Schema.Types.ObjectId;
   boardId:Schema.Types.ObjectId;
+  columnId:Schema.Types.ObjectId;
 }
-export interface ColumnDocument extends Column,Document {}
+export interface TaskDocument extends Task,Document {
+  
+}

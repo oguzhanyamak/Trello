@@ -7,6 +7,7 @@ import {Socket} from "./types/socket.interface"
 import * as usersController from "./controllers/users"; // Kullanıcı işlemleri için controller dosyasını içe aktarıyoruz
 import * as boardsController from "./controllers/boards"; 
 import * as columnsController from "./controllers/columns"; 
+import * as tasksController from "./controllers/tasks"; 
 import bodyParser from "body-parser"; // Gelen JSON verilerini işlemek için body-parser kullanıyoruz
 import { mongoDbUri } from "./config"; // MongoDB bağlantı URI'sini içe aktarıyoruz
 import authMiddleware from "./middlewares/auth";
@@ -49,6 +50,7 @@ app.get("/api/boards",authMiddleware,boardsController.getBoards);
 app.post("/api/boards",authMiddleware,boardsController.createBoard);
 app.get("/api/boards/:boardId",authMiddleware,boardsController.getBoard);
 app.get("/api/boards/:boardId/columns",authMiddleware,columnsController.getColumns);
+app.get("/api/boards/:boardId/tasks",authMiddleware,tasksController.getTasks);
 
 // Socket.io bağlantısı için olay dinleyici
 // Socket.IO için kimlik doğrulama middleware'i
@@ -92,6 +94,9 @@ io.on("connection", (socket) => {
   });
   socket.on(SocketEventsEnum.columnsCreate, (data) => {
     columnsController.createColumn(io, socket, data);
+  });
+  socket.on(SocketEventsEnum.tasksCreate, (data) => {
+    tasksController.createTask(io, socket, data);
   });
 });
 

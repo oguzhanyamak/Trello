@@ -9,6 +9,9 @@ import { SocketEventsEnum } from '../../../shared/types/socketEvents.enum';
 import { ColumnsService } from '../../../shared/services/columns.service';
 import { ColumnInterface } from '../../../shared/types/column.interface';
 import { ColumnInputInterface } from '../../../shared/types/columnIput.interface';
+import { TaskInterface } from '../../../shared/types/task.interface';
+import { TasksService } from '../../../shared/services/tasks.service';
+import { TaskInputInterface } from '../../../shared/types/taskInput.interface';
 
 @Component({
   selector: 'app-board',
@@ -18,9 +21,9 @@ import { ColumnInputInterface } from '../../../shared/types/columnIput.interface
 })
 export class BoardComponent implements OnInit {
   boardId: string;
-  data$:Observable<{board:BoardInterface,columns:ColumnInterface[]}>;
+  data$:Observable<{board:BoardInterface,columns:ColumnInterface[],tasks:TaskInterface[]}>;
 
-  constructor(private boardsService: BoardsService, private route: ActivatedRoute,private boardService:BoardService,private socketService:SocketService,private router:Router,private columnsService:ColumnsService) {
+  constructor(private boardsService: BoardsService, private route: ActivatedRoute,private boardService:BoardService,private socketService:SocketService,private router:Router,private columnsService:ColumnsService,private tasksService:TasksService) {
     this.boardId = this.route.snapshot.paramMap.get('boardId') ?? '';
     if (!this.boardId) {
       throw new Error('Cannot get boardId from URL');
@@ -29,9 +32,10 @@ export class BoardComponent implements OnInit {
 // this.data$ Observable'ı, boardService içindeki board$ ve columns$ stream'lerini birleştirerek güncellenmiş veriyi oluşturur.
 this.data$ = combineLatest([
   this.boardService.board$.pipe(filter(Boolean)),  // board$ stream'ini filtreleyerek sadece geçerli (null veya undefined olmayan) değerleri alırız.
-  this.boardService.columns$,  // columns$ stream'ini olduğu gibi alıyoruz.
+  this.boardService.columns$,
+  this.boardService.tasks$  // columns$ stream'ini olduğu gibi alıyoruz.
 ])  // combineLatest ile gelen veriyi map ile dönüştürerek, board ve columns'u içeren bir nesne haline getiriyoruz.
-.pipe(map(([board, columns]) => ({ board, columns })));
+.pipe(map(([board, columns,tasks]) => ({ board, columns ,tasks})));
   }
   ngOnInit(): void {
     this.fetchData();
@@ -49,6 +53,9 @@ this.data$ = combineLatest([
     this.socketService.listen<ColumnInterface>(SocketEventsEnum.columnsCreateSuccess).subscribe((column) => {
       this.boardService.addColumn(column);
     });
+    this.socketService.listen<TaskInterface>(SocketEventsEnum.tasksCreateSuccess).subscribe((task) => {
+      this.boardService.addTask(task);
+    });
   }
 
   fetchData(): void {
@@ -63,11 +70,25 @@ this.data$ = combineLatest([
     this.columnsService.getColumns(this.boardId).subscribe(columns => {
       this.boardService.setColumns(columns);
     });
+    this.tasksService.getTasks(this.boardId).subscribe(tasks => {
+      this.boardService.setTask(tasks);
+    });
   }
 
   createColumn(title:string):void{
     const columnInput : ColumnInputInterface = {title,boardId:this.boardId};
     this.columnsService.createColumn(columnInput);
+  }
 
+  getTasksByColumn(columnId:string,tasks:TaskInterface[]):TaskInterface[]{
+    return tasks.filter((task) => task.columnId === columnId)
+  }
+  createTask(title: string, columnId: string): void {
+    const taskInput: TaskInputInterface = {
+      title,
+      boardId: this.boardId,
+      columnId,
+    };
+    this.tasksService.createTask(taskInput);
   }
 }

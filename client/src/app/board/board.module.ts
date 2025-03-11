@@ -8,6 +8,7 @@ import { SocketService } from '../shared/services/socket.service';
 import { ColumnsService } from '../shared/services/columns.service';
 import { TopbarModule } from '../shared/modules/topbar/topbar.module';
 import { InlineFormModule } from '../shared/modules/inlineForm/inline-form.module';
+import { TasksService } from '../shared/services/tasks.service';
 
 const routes : Routes = [
   {
@@ -29,6 +30,6 @@ const routes : Routes = [
     RouterModule.forChild(routes)
   ],
   exports:[BoardComponent],
-  providers:[BoardsService,SocketService,ColumnsService]
+  providers:[BoardsService,SocketService,ColumnsService,TasksService]
 })
 export class BoardModule { }

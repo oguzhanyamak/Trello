@@ -4,6 +4,7 @@ import { BoardInterface } from '../../shared/types/board.interface';
 import { SocketService } from '../../shared/services/socket.service';
 import { SocketEventsEnum } from '../../shared/types/socketEvents.enum';
 import { ColumnInterface } from '../../shared/types/column.interface';
+import { TaskInterface } from '../../shared/types/task.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -12,12 +13,15 @@ export class BoardService {
   // Board bilgisini saklamak için BehaviorSubject
   board$ = new BehaviorSubject<BoardInterface |null >(null);
   columns$ = new BehaviorSubject<ColumnInterface[] >([]);
-
+  tasks$ = new BehaviorSubject<TaskInterface[] >([]);
   constructor(private socketService:SocketService) { }
 
   //Mevcut board bilgisini günceller.
   setBoard(board:BoardInterface):void {
     this.board$.next(board);;
+  }
+  setTask(tasks:TaskInterface[]):void {
+    this.tasks$.next(tasks);;
   }
   //Kullanıcı board'dan ayrıldığında board bilgisini sıfırlar ve sunucuya bildirir.
   leaveBoard(boardId:string):void{
@@ -32,5 +36,12 @@ export class BoardService {
     const updatedColumns = [...this.columns$.getValue(),column];
     // Yeni listeyi yayınlayarak güncellenmesini sağlıyoruz.
     this.columns$.next(updatedColumns);
+  }
+
+  addTask(task:TaskInterface):void{
+    // Mevcut sütunları alıp, yeni sütunu ekleyerek güncellenmiş liste oluşturuyoruz.
+    const updatedTasks = [...this.tasks$.getValue(),task];
+    // Yeni listeyi yayınlayarak güncellenmesini sağlıyoruz.
+    this.tasks$.next(updatedTasks);
   }
 }
