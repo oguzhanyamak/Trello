@@ -5,7 +5,8 @@ import mongoose from "mongoose"; // MongoDB bağlantısı için Mongoose kullan�
 import { Server } from "socket.io"; // Gerçek zamanlı iletişim için Socket.io kullanıyoruz
 import {Socket} from "./types/socket.interface"
 import * as usersController from "./controllers/users"; // Kullanıcı işlemleri için controller dosyasını içe aktarıyoruz
-import * as boardsController from "./controllers/boards"; // Kullanıcı işlemleri için controller dosyasını içe aktarıyoruz
+import * as boardsController from "./controllers/boards"; 
+import * as columnsController from "./controllers/columns"; 
 import bodyParser from "body-parser"; // Gelen JSON verilerini işlemek için body-parser kullanıyoruz
 import { mongoDbUri } from "./config"; // MongoDB bağlantı URI'sini içe aktarıyoruz
 import authMiddleware from "./middlewares/auth";
@@ -42,13 +43,12 @@ app.get("/", (req, res) => {
 
 // Kullanıcı kayıt işlemi için POST isteği
 app.post("/api/users", usersController.register);
-
-// Kullanıcı giriş işlemi için POST isteği
 app.post("/api/users/login", usersController.login);
 app.get("/api/user",authMiddleware,usersController.currentUser);
 app.get("/api/boards",authMiddleware,boardsController.getBoards);
 app.post("/api/boards",authMiddleware,boardsController.createBoard);
 app.get("/api/boards/:boardId",authMiddleware,boardsController.getBoard);
+app.get("/api/boards/:boardId/columns",authMiddleware,columnsController.getColumns);
 
 // Socket.io bağlantısı için olay dinleyici
 // Socket.IO için kimlik doğrulama middleware'i
@@ -89,6 +89,9 @@ io.on("connection", (socket) => {
   // Kullanıcı bir board'dan ayrılmak istediğinde çalışır
   socket.on(SocketEventsEnum.boardsLeave, (data) => {
     boardsController.leaveBoard(io, socket, data);
+  });
+  socket.on(SocketEventsEnum.columnsCreate, (data) => {
+    columnsController.createColumn(io, socket, data);
   });
 });
 

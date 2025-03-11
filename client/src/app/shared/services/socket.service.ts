@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { CurrentUserInterface } from '../../auth/types/currentUser.interface';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../environments/environment';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -44,6 +45,27 @@ export class SocketService {
     }
     this.socket.emit(eventName, message);
   }
+
+// Generic bir listen metodu tanımlanıyor, verilen olay adını dinleyerek Observable<T> döndürüyor.
+listen<T>(eventName: string): Observable<T> {
+  // Mevcut socket bağlantısını alıyoruz.
+  const socket = this.socket;
+
+  // Eğer socket bağlantısı yoksa, hata fırlatıyoruz.
+  if (!socket) {
+      throw new Error("Socket connection is not established");
+  }
+
+  // Yeni bir Observable oluşturuyoruz, bu Observable belirli bir olay adını dinleyerek veri yayınlayacak.
+  return new Observable((subscriber) => {
+      // Socket belirli bir eventName (olay adını) dinliyor.
+      socket.on(eventName, (data) => {
+          // Olay tetiklendiğinde gelen veriyi Observable abonelerine iletiyoruz.
+          subscriber.next(data);
+      });
+  });
+}
+
 
   // Constructor (gerekirse başka işlemler yapılabilir)
   constructor() {}

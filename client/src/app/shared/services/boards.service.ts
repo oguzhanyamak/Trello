@@ -30,4 +30,6 @@ export class BoardsService {
   getBoard(boardId:string):Observable<BoardInterface>{
     return this.http.get<BoardInterface>(`${environment.apiUrl}/boards/${boardId}`);
   }
+
+
 }
