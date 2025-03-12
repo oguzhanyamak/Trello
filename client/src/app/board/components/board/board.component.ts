@@ -50,8 +50,7 @@ this.data$ = combineLatest([
 
   initializeListeners():void{
     this.router.events.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
-      if (event instanceof NavigationStart){
-        console.log("leaving page");
+      if (event instanceof NavigationStart && !event.url.includes('/boards/')){
         this.boardService.leaveBoard(this.boardId);
       }
     });
@@ -73,6 +72,26 @@ this.data$ = combineLatest([
     this.socketService.listen<ColumnInterface>(SocketEventsEnum.columnsUpdateSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe((column) => {
       this.boardService.updateColumn(column);
     });
+    this.socketService
+      .listen<TaskInterface>(SocketEventsEnum.tasksUpdateSuccess)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((updatedTask) => {
+        this.boardService.updateTask(updatedTask);
+      });
+
+    this.socketService
+      .listen<string>(SocketEventsEnum.tasksDeleteSuccess)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((taskId) => {
+        this.boardService.deleteTask(taskId);
+      });
+
+    this.socketService
+      .listen<void>(SocketEventsEnum.boardsDeleteSuccess)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(() => {
+        this.router.navigateByUrl('/boards');
+      });
   }
 
   fetchData(): void {
@@ -126,5 +145,9 @@ this.data$ = combineLatest([
 
   updateColumnName(columnName:string,columnId:string){
     this.columnsService.updateColumn(this.boardId,columnId,{title:columnName});
+  }
+
+  openTask(taskId:string):void{
+    this.router.navigate(['boards',this.boardId,'tasks',taskId])
   }
 }
