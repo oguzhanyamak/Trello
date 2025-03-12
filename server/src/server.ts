@@ -104,6 +104,12 @@ io.on("connection", (socket) => {
   socket.on(SocketEventsEnum.boardsDelete, (data) => {
     boardsController.deleteBoard(io, socket, data);
   });
+  socket.on(SocketEventsEnum.columnsDelete, (data) => {
+    columnsController.deleteColumn(io, socket, data);
+  });
+  socket.on(SocketEventsEnum.columnsUpdate, (data) => {
+    columnsController.updateColumn(io, socket, data);
+  });
 });
 
 

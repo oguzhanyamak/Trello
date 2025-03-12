@@ -8,7 +8,8 @@
   <div class="columns">
     <div class="column" *ngFor="let column of data.columns">
       <div class="column-title">
-        {{ column.title }}
+        <app-inline-form class="edit-column-form" [defaultText]="column.title" title="column.title" (handleSubmit)="updateColumnName($event,column.id)"></app-inline-form>
+        <img src="/assets/close_icon.svg" class="column-delete" (click)="deleteColumn(column.id)"/>
       </div>
       <div
         *ngFor="let task of getTasksByColumn(column.id, data.tasks)"

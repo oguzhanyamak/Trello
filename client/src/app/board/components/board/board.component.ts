@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { BoardsService } from '../../../shared/services/boards.service';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { BoardService } from '../../services/board.service';
 import { BoardInterface } from '../../../shared/types/board.interface';
-import { combineLatest, filter, map, Observable } from 'rxjs';
+import { combineLatest, filter, map, Observable, Subject, takeUntil } from 'rxjs';
 import { SocketService } from '../../../shared/services/socket.service';
 import { SocketEventsEnum } from '../../../shared/types/socketEvents.enum';
 import { ColumnsService } from '../../../shared/services/columns.service';
@@ -19,9 +19,10 @@ import { TaskInputInterface } from '../../../shared/types/taskInput.interface';
   templateUrl: './board.component.html',
   styleUrl: './board.component.scss'
 })
-export class BoardComponent implements OnInit {
+export class BoardComponent implements OnInit,OnDestroy {
   boardId: string;
   data$:Observable<{board:BoardInterface,columns:ColumnInterface[],tasks:TaskInterface[]}>;
+  private unsubscribe$ = new Subject<void>();
 
   constructor(private boardsService: BoardsService, private route: ActivatedRoute,private boardService:BoardService,private socketService:SocketService,private router:Router,private columnsService:ColumnsService,private tasksService:TasksService) {
     this.boardId = this.route.snapshot.paramMap.get('boardId') ?? '';
@@ -37,6 +38,10 @@ this.data$ = combineLatest([
 ])  // combineLatest ile gelen veriyi map ile dönüştürerek, board ve columns'u içeren bir nesne haline getiriyoruz.
 .pipe(map(([board, columns,tasks]) => ({ board, columns ,tasks})));
   }
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();  // Abonelikleri sonlandır
+    this.unsubscribe$.complete(); // Kaynakları temizle
+  }
   ngOnInit(): void {
     this.fetchData();
     this.socketService.emit(SocketEventsEnum.boardsJoin,{boardId:this.boardId})
@@ -44,28 +49,34 @@ this.data$ = combineLatest([
   }
 
   initializeListeners():void{
-    this.router.events.subscribe(event => {
+    this.router.events.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       if (event instanceof NavigationStart){
         console.log("leaving page");
         this.boardService.leaveBoard(this.boardId);
       }
     });
-    this.socketService.listen<ColumnInterface>(SocketEventsEnum.columnsCreateSuccess).subscribe((column) => {
+    this.socketService.listen<ColumnInterface>(SocketEventsEnum.columnsCreateSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe((column) => {
       this.boardService.addColumn(column);
     });
-    this.socketService.listen<TaskInterface>(SocketEventsEnum.tasksCreateSuccess).subscribe((task) => {
+    this.socketService.listen<TaskInterface>(SocketEventsEnum.tasksCreateSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe((task) => {
       this.boardService.addTask(task);
     });
-    this.socketService.listen<BoardInterface>(SocketEventsEnum.boardsUpdateSuccess).subscribe((board) => {
+    this.socketService.listen<BoardInterface>(SocketEventsEnum.boardsUpdateSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe((board) => {
       this.boardService.updateBoard(board);
     });
-    this.socketService.listen<void>(SocketEventsEnum.boardsDeleteSuccess).subscribe(() => {
+    this.socketService.listen<void>(SocketEventsEnum.boardsDeleteSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe(() => {
       this.router.navigateByUrl('/boards');
+    });
+    this.socketService.listen<string>(SocketEventsEnum.columnsDeleteSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe((columnId) => {
+      this.boardService.deleteColumn(columnId);
+    });
+    this.socketService.listen<ColumnInterface>(SocketEventsEnum.columnsUpdateSuccess).pipe(takeUntil(this.unsubscribe$)).subscribe((column) => {
+      this.boardService.updateColumn(column);
     });
   }
 
   fetchData(): void {
-    this.boardsService.getBoard(this.boardId).subscribe({
+    this.boardsService.getBoard(this.boardId).pipe(takeUntil(this.unsubscribe$)).subscribe({
       next: (board) => {
         this.boardService.setBoard(board);
       },
@@ -73,10 +84,10 @@ this.data$ = combineLatest([
         console.error('Error fetching board data:', err);
       }
     });
-    this.columnsService.getColumns(this.boardId).subscribe(columns => {
+    this.columnsService.getColumns(this.boardId).pipe(takeUntil(this.unsubscribe$)).subscribe(columns => {
       this.boardService.setColumns(columns);
     });
-    this.tasksService.getTasks(this.boardId).subscribe(tasks => {
+    this.tasksService.getTasks(this.boardId).pipe(takeUntil(this.unsubscribe$)).subscribe(tasks => {
       this.boardService.setTask(tasks);
     });
   }
@@ -107,5 +118,13 @@ this.data$ = combineLatest([
       this.boardsService.deleteBoard(this.boardId);
     }
 
+  }
+
+  deleteColumn(columnId:string){
+    this.columnsService.deleteColumn(this.boardId,columnId)
+  }
+
+  updateColumnName(columnName:string,columnId:string){
+    this.columnsService.updateColumn(this.boardId,columnId,{title:columnName});
   }
 }

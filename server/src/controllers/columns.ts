@@ -33,3 +33,60 @@ export const createColumn = async (io:Server ,socket:Socket ,data:{boardId:strin
         socket.emit(SocketEventsEnum.columnsCreateFailure,getErrorMessage(error))
     }
 }
+
+
+export const deleteColumn = async (
+  io: Server,
+  socket: Socket,
+  data: { boardId: string,columnId:string }
+) => {
+  try {
+    // Kullanıcının yetkili olup olmadığını kontrol et
+    if (!socket.user) {
+      socket.emit(
+        SocketEventsEnum.columnsDeleteFailure,
+        "User is not authorized" // Yetkisiz kullanıcıya hata mesajı gönder
+      );
+      return;
+    }
+
+    // Board'u veritabanından sil
+    await ColumnModel.deleteOne({ _id: data.columnId, });
+
+    // Tüm bağlı istemcilere board'un silindiğine dair bildirim gönder
+    io.to(data.boardId).emit(SocketEventsEnum.columnsDeleteSuccess,data.columnId);
+  } catch (error) {
+    // Bir hata oluşursa, istemciye hata mesajı gönder
+    socket.emit(SocketEventsEnum.columnsDeleteFailure, getErrorMessage(error));
+  }
+};
+
+
+export const updateColumn = async (
+  io: Server,
+  socket: Socket,
+  data: { boardId: string; columnId:string ,fields: { title: string } }
+) => {
+  try {
+    // Kullanıcının yetkili olup olmadığını kontrol et
+    if (!socket.user) {
+      socket.emit(
+        SocketEventsEnum.columnsUpdateFailure,
+        "User is not authorized" // Yetkisiz kullanıcıya hata mesajı gönder
+      );
+      return;
+    }
+
+    // Board güncellemesini gerçekleştir ve tüm bağlı istemcilere başarı mesajı gönder
+    io.to(data.boardId).emit(
+      SocketEventsEnum.columnsUpdateSuccess,
+      await ColumnModel.findByIdAndUpdate(data.columnId, data.fields, {
+        new: true, // Güncellenmiş dokümanı döndür
+      })
+    );
+  } catch (error) {
+    // Bir hata oluşursa, istemciye hata mesajı gönder
+    socket.emit(SocketEventsEnum.columnsUpdateFailure, getErrorMessage(error));
+  }
+};
+

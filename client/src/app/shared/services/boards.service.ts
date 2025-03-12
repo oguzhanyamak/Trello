@@ -41,4 +41,5 @@ export class BoardsService {
     this.socketService.emit(SocketEventsEnum.boardsDelete,{boardId})
   }
 
+
 }

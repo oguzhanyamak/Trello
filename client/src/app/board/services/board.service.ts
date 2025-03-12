@@ -56,4 +56,19 @@ export class BoardService {
      // Mevcut board'un kopyasını oluştur ve başlığını güncelle, ardından yeni değeri yay
     this.board$.next({...board,title:updatedBoard.title});
   }
+
+  deleteColumn(columnId:string){
+    const updatedColumns = this.columns$.getValue().filter(column => column.id !== columnId);
+    this.columns$.next(updatedColumns);
+  }
+
+  updateColumn(updatedColumn:ColumnInterface):void{
+    const updatedColumns = this.columns$.getValue().map((column) => {
+      if(column.id === updatedColumn.id){
+        return {...column,title:updatedColumn.title};}
+        return column
+      });
+      this.columns$.next(updatedColumns)
+  }
+
 }
