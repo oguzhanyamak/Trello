@@ -1,59 +1,50 @@
-# Eltrello
+### 1. **SocketService (WebSocket bağlantısı yöneticisi)**:
+   - WebSocket üzerinden bağlantı kurma, veri gönderme ve dinleme işlemlerini yönetiyor.
+   - `setupSocketConnection()`: Kullanıcı token'ı ile WebSocket bağlantısı başlatılır.
+   - `emit()`: Olay gönderir (örneğin, sütun oluşturma veya güncelleme).
+   - `listen()`: Belirli bir olay dinler ve Observable aracılığıyla veri sağlar.
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.0.
+### 2. **ColumnsService (Sütun işlemleri yöneticisi)**:
+   - Sütunları almak için HTTP istekleri ve WebSocket üzerinden sütun ekleme, silme ve güncelleme işlemleri gerçekleştirir.
+   - `getColumns()`: Belirli bir board için sütunları getirir.
+   - `createColumn()`: WebSocket üzerinden yeni bir sütun oluşturur.
+   - `deleteColumn()`: WebSocket üzerinden sütun silme işlemi gönderir.
+   - `updateColumn()`: WebSocket üzerinden sütun günceller.
 
-## Development server
+### 3. **BoardsService (Board işlemleri yöneticisi)**:
+   - Board'lar için HTTP isteklerini yapar ve WebSocket üzerinden board bilgilerini günceller veya siler.
+   - `getBoards()`: Tüm board'ları getirir.
+   - `createBoard()`: Yeni bir board oluşturur.
+   - `getBoard()`: Belirli bir board bilgisini getirir.
+   - `updateBoard()`: WebSocket ile board günceller.
+   - `deleteBoard()`: WebSocket ile board siler.
 
-To start a local development server, run:
+### 4. **BoardService (Board'a özgü dinamik işlemler)**:
+   - BehaviorSubject ile board, sütun ve görev verilerini günceller ve kullanıcı etkileşimlerini yönetir.
+   - `setBoard()`, `setColumns()`, `setTask()`: Board, sütun ve görev bilgilerini BehaviorSubject ile günceller.
+   - `leaveBoard()`: Kullanıcı board'dan ayrıldığında, board bilgisini sıfırlar ve WebSocket ile bildirir.
+   - `addColumn()`, `deleteColumn()`, `updateColumn()`: Sütun ekleme, silme ve güncelleme işlemleri yapar.
+   - `addTask()`, `deleteTask()`, `updateTask()`: Görev ekler, siler ve günceller.
 
-```bash
-ng serve
-```
+### 5. **AuthGuardService (Yetkilendirme koruması)**:
+   - Kullanıcının giriş yapıp yapmadığını kontrol eder ve giriş yapmadıysa anasayfaya yönlendirir.
+   - `canActivate()`: Kullanıcı yetkisi kontrolü yapar ve giriş yapmadıysa yönlendirir.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### 6. **AuthService (Kullanıcı işlemleri yöneticisi)**:
+   - Kullanıcı girişi, kaydı, çıkışı ve token yönetimi işlemleri yapılır.
+   - `register()`, `login()`, `logout()`: Kullanıcı kayıt, giriş ve çıkış işlemleri.
+   - `getCurrentUser()`: Mevcut kullanıcı bilgisini alır.
+   - `setCurrentUser()`: Kullanıcı bilgisini günceller.
+   - `setToken()`: Token'ı localStorage'a kaydeder.
 
-## Code scaffolding
+### 7. **AuthInterceptor (HTTP İsteklerinde Yetkilendirme)**:
+   - HTTP isteklerine token'ı ekler ve yetkilendirme işlemi yapar.
+   - `intercept()`: Token'ı HTTP başlıklarına ekler.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+---
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### Genel Yorum:
+1. **Modüler yapı**: Her servisin kendi işlevine odaklanması sayesinde kodun okunabilirliği ve sürdürülebilirliği artırılmış. WebSocket ve HTTP isteklerinin ayrılması, uygulamanın yönetilmesini kolaylaştırır.
+2. **Reactive (ReactiveX)**: `BehaviorSubject` kullanımı ile reaktif programlama yaklaşımına uygun bir yapı oluşturulmuş. Kullanıcı ve board durumlarının dinamik bir şekilde yönetilmesi sağlanmış.
+3. **Authorization (Yetkilendirme)**: `AuthService` ve `AuthInterceptor` ile kullanıcının yetkilendirilmesi doğru şekilde yönetilmiş.
+4. **WebSocket entegrasyonu**: `SocketService` ile WebSocket kullanımı, anlık veri iletişimi ve gerçek zamanlı işlemler için güçlü bir yapı sağlıyor.
